@@ -1,44 +1,42 @@
 // spec.js
-var DialogElement = require ('./DialogElement.js');
-var filesPageElements = require ('./FilesPage.js');
+var DialogElement = require('./pages/DialogElement.js');
+var filesPageElements = require('./pages/FilesPage.js');
+var loginPageElements = require('./pages/LoginPage.js');
+var settingsPage = require('./pages/SettingsPage.js');
 
-describe('Protractor Demo App', function() {
+describe('ADF Demo App', function () {
 
+    var errorBar = element(by.xpath("//snack-bar-container//span"));
+    var folderName = 'RoxanaAcatrinei';
 
-    var errorBar = element(by.className("mat-snack-bar-container"));
-
-    afterEach(function() {
-    //    browser.driver.sleep(1500);
+    afterEach(function () {
         browser.waitForAngular();
     });
 
-    it('should select ECM Provider and click Apply button', function() {
-        browser.get('http://qaexercise.envalfresco.com/settings');
-        element(by.className('mat-select-value')).click();
-        element.all(by.className("mat-option-text")).get(1).click();
-        element(by.id('host-button')).click();
-});
-
-    it('should login to guest user', function() {
-        element(by.id('username')).sendKeys('guest@example.com');
-        element(by.id('password')).sendKeys('Password');
-        element(by.id('login-button')).click();
+    it('should select ECM Provider and click Apply button', function () {
+        settingsPage.get('http://qaexercise.envalfresco.com/settings');
+        settingsPage.apply('ECM')
     });
 
-    it('should access files page and create new folder',async function() {
-      await  element(by.cssContainingText('span.mat-line', 'Content Services')).click();
-      await  DialogElement.create('ratest');
+    it('should login to guest user', function () {
+        loginPageElements.login("guest@example.com", "Password");
     });
 
-    it('should try to create a new folder which already exists', function(){
-        expect(element(by.xpath("//adf-datatable-row//span[text()='ratest']")).isPresent()).toBe(true);
-        DialogElement.create('ratest');
-        expect( errorBar.getText()).toEqual("There's already a folder with this name. Try a different name.");
-        element(by.id('adf-folder-cancel-button')).click();
+    it('should access files page and create new folder', function () {
+        element(by.xpath('//span[contains(text(),\'Content Services\')]')).click();
+        DialogElement.create(folderName);
+        filesPageElements.isCreated(folderName);
     });
 
-    it('should delete the folder', function(){
-        filesPageElements.delete('ratest');
-        expect(element(by.cssContainingText('adf-datatable-row.aria-label', 'ratest')).isPresent()).toBe(false);
+    it('should try to create a new folder which already exists', function () {
+        DialogElement.create(folderName);
+        expect(errorBar.getText()).toEqual("There's already a folder with this name. Try a different name.");
+        element(by.xpath('//button[@class=\'mat-button\']/span[normalize-space()=\'Cancel\']')).click();
+    });
+
+    it('should delete the folder', function () {
+        browser.waitForAngular();
+        filesPageElements.delete(folderName);
+        expect(element(by.cssContainingText('adf-datatable-row.aria-label', folderName)).isPresent()).toBe(false);
     });
 });
